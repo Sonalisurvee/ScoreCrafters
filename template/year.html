@@ -1,0 +1,596 @@
+{% load custom_filters %}
+{% load static %}
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Player Performance</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+<body>
+    <h1>Player List</h1>
+    <h2>Select Player</h2>
+    <form action="/players_performance" method="get"> 
+        <label for="player_name">Select a player:</label>
+        <select name="player" id="player_name">
+            {% for player in players %}
+                <option value="{{ player }}">{{ player }}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="Show Data">
+    </form>
+
+    {% if player_metrics %}
+    <h2>Performance Metrics</h2>
+    <ul>
+        <li><strong>Player:</strong> {{ player_name }}</li>
+        {% if player_metrics.batting_avg|valid_value %}
+            <li><strong>Batting Average:</strong> {{ player_metrics.batting_avg|floatformat:2 }}</li>
+        {% endif %}
+        {% if player_metrics.batting_sr|valid_value %}
+            <li><strong>Batting Strike Rate:</strong> {{ player_metrics.batting_sr|floatformat:2  }}</li>
+        {% endif %}
+        {% if player_metrics.avg_balls_faced|valid_value %}
+            <li><strong>Average Balls Faced:</strong> {{ player_metrics.avg_balls_faced |floatformat:2}}</li>
+        {% endif %}
+        {% if player_metrics.boundary_percentage|valid_value %}
+            <li><strong>Boundary Percentage:</strong> {{ player_metrics.boundary_percentage }}%</li>
+        {% endif %}
+        {% if player_metrics.innings_batted|valid_value %}
+            <li><strong>Innings Batted:</strong> {{ player_metrics.innings_batted }}</li>
+        {% endif %}
+        {% if player_metrics.bowling_avg|valid_value %}
+            <li><strong>Bowling Average:</strong> {{ player_metrics.bowling_avg|floatformat:2  }}</li>
+        {% endif %}
+        {% if player_metrics.bowling_sr|valid_value %}
+            <li><strong>Bowling Strike Rate:</strong> {{ player_metrics.bowling_sr|floatformat:2  }}</li>
+        {% endif %}
+        {% if player_metrics.wickets_taken|valid_value %}
+            <li><strong>Wickets taken:</strong> {{ player_metrics.wickets_taken }}</li>
+        {% endif %}
+        {% if player_metrics.dot_balls|valid_value %}
+            <li><strong>Dot Balls:</strong> {{ player_metrics.dot_balls|floatformat:2  }}</li>
+        {% endif %}
+        {% if player_metrics.economy|valid_value %}
+            <li><strong>Economy:</strong> {{ player_metrics.economy|floatformat:2  }}</li>
+        {% endif %}
+        {% if player_metrics.innings_bowled|valid_value %}
+            <li><strong>Innings Bowled:</strong> {{ player_metrics.innings_bowled }}</li>
+        {% endif %}
+        
+        <div id="chartContainerBattingAvgBowlingAvg" style="width: 1200px; height: 800px;">
+            <canvas id="battingAvgBowlingAvgChart"></canvas>
+        </div>
+       
+    </ul>
+    {% endif %}
+
+
+
+
+    <script>
+        var playerMetricsYear = {
+            'Year': {{ player_metrics_year.year|default:'[]' }},
+            'Batting Average': {{ player_metrics_year.batting_avg|default:'[]' }},
+            'Bowling Average': {{ player_metrics_year.bowling_avg|default:'[]' }},
+            'Batting Strike Rate': {{ player_metrics_year.batting_sr|default:'[]' }},
+            'Bowling Strike Rate': {{ player_metrics_year.bowling_sr|default:'[]' }},
+            'Boundary Percentage': {{ player_metrics_year.boundary_percentage|default:'[]' }},
+            'Total Runs': {{ player_metrics_year.total_runs|default:'[]' }},
+            'Total Wickets': {{ player_metrics_year.total_wickets|default:'[]' }},
+            'Innings Batted': {{ player_metrics_year.innings_batted|default:'[]' }},
+            'Bowling Economy': {{ player_metrics_year.bowling_economy|default:'[]' }},
+        };
+
+
+        var battingAvgBowlingAvgCtx = document.getElementById('battingAvgBowlingAvgChart').getContext('2d');
+        var battingAvgBowlingAvgChart = new Chart(battingAvgBowlingAvgCtx, {
+            type: 'line',
+            data: {
+                labels: playerMetricsYear['Year'],
+                datasets: [
+                    {
+                        label: 'Batting Average',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        data: playerMetricsYear['Batting Average'],
+                        yAxisID: 'y-axis-1',
+                    },
+                    {
+                        label: 'Bowling Average',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        data: playerMetricsYear['Bowling Average'],
+                        yAxisID: 'y-axis-2',
+                    },
+                ],
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        title: {
+                            display: true,
+                            text: 'Year',
+                        },
+                    },
+                    y: [
+                        {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            id: 'y-axis-1',
+                            title: {
+                                display: true,
+                                text: 'Batting Average',
+                            },
+                        },
+                        {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            id: 'y-axis-2',
+                            title: {
+                                display: true,
+                                text: 'Bowling Average',
+                            },
+                        },
+                    ],
+                },
+            },
+        });
+
+
+    </script>
+
+
+</body>
+</html>
+
+<canvas id="battingSrBowlingSrChart"></canvas>
+<canvas id="boundaryPercentageChart"></canvas>
+<canvas id="totalRunsChart"></canvas>
+<canvas id="totalWicketsChart"></canvas>
+<canvas id="inningsBattedRunsWicketsChart"></canvas>
+<canvas id="battingAvgBowlingAvgScatterPlot"></canvas>
+<canvas id="bowlingSrEconomyScatterPlot"></canvas>
+<canvas id="runsBallsWickets3DScatterPlot"></canvas>
+<canvas id="bowlingEconomyOverYearsChart"></canvas>
+
+
+'Year': {{ player_metrics_year.year|default:'[]' }},
+'Batting Average': {{ player_metrics_year.batting_avg|default:'[]' }},
+'Bowling Average': {{ player_metrics_year.bowling_avg|default:'[]' }},
+'Batting Strike Rate': {{ player_metrics_year.batting_sr|default:'[]' }},
+'Bowling Strike Rate': {{ player_metrics_year.bowling_sr|default:'[]' }},
+'Boundary Percentage': {{ player_metrics_year.boundary_percentage|default:'[]' }},
+'Total Runs': {{ player_metrics_year.total_runs|default:'[]' }},
+'Total Wickets': {{ player_metrics_year.total_wickets|default:'[]' }},
+'Innings Batted': {{ player_metrics_year.innings_batted|default:'[]' }},
+'Bowling Economy': {{ player_metrics_year.bowling_economy|default:'[]' }},
+
+
+1. **Batting Average and Bowling Average Over Years (Line Chart):**
+   - X-axis: Year
+   - Y-axis: Batting Average and Bowling Average
+
+2. **Batting Strike Rate and Bowling Strike Rate Over Years (Line Chart):**
+   - X-axis: Year
+   - Y-axis: Batting Strike Rate and Bowling Strike Rate
+
+3. **Boundary Percentage Over Years (Line Chart):**
+   - X-axis: Year
+   - Y-axis: Boundary Percentage
+
+4. **Dismissal Types (Pie Chart):**
+   - Categories: Different types of dismissals (e.g., caught, bowled, LBW, etc.)
+   - Values: Frequency of each dismissal type
+
+5. **Total Runs and Wickets Over Years (Line Chart or Bar Chart):**
+   - X-axis: Year
+   - Y-axis: Total Runs and Total Wickets
+
+6. **Innings Batted vs. Runs Scored vs. Wickets Taken (Bubble Chart):**
+   - X-axis: Innings Batted
+   - Y-axis: Total Runs
+   - Size of Bubble: Total Wickets
+
+7. **Batting Average vs. Bowling Average (Scatter Plot):**
+   - X-axis: Batting Average
+   - Y-axis: Bowling Average
+
+8. **Bowling Strike Rate vs. Economy (Scatter Plot):**
+   - X-axis: Bowling Strike Rate
+   - Y-axis: Economy
+
+9. **Runs Scored vs. Balls Faced vs. Wickets Taken (3D Scatter Plot):**
+   - X-axis: Runs Scored
+   - Y-axis: Balls Faced
+   - Z-axis: Wickets Taken
+
+10. **Bowling Economy Over Years (Line Chart):**
+    - X-axis: Year
+    - Y-axis: Bowling Economy
+
+give this code according to the year
+
+
+Based on the provided data, you can create various effective visualizations to represent different aspects of a player's performance. Here are some visualization ideas:
+
+1. **Batting Average Over Years (Line Chart):**
+   - X-axis: Year
+   - Y-axis: Batting Average
+
+2. **Batting Strike Rate Over Years (Line Chart):**
+   - X-axis: Year
+   - Y-axis: Batting Strike Rate
+
+3. **Boundary Percentage Over Years (Line Chart):**
+   - X-axis: Year
+   - Y-axis: Boundary Percentage
+
+4. **Total Runs Over Years (Line Chart or Bar Chart):**
+   - X-axis: Year
+   - Y-axis: Total Runs
+
+5. **Dismissal Types (Pie Chart):**
+   - Categories: Different types of dismissals (e.g., caught, bowled, LBW, etc.)
+   - Values: Frequency of each dismissal type
+
+6. **Bowling Performance Over Years (Line Chart or Bar Chart):**
+   - X-axis: Year
+   - Y-axis: Total Wickets, Bowling Average, Bowling Strike Rate
+
+7. **Innings Batted vs. Runs Scored (Bubble Chart):**
+   - X-axis: Innings Batted
+   - Y-axis: Total Runs
+   - Size of Bubble: Total Wickets
+
+8. **Batting Average vs. Bowling Average (Scatter Plot):**
+   - X-axis: Batting Average
+   - Y-axis: Bowling Average
+
+9. **Bowling Strike Rate vs. Economy (Scatter Plot):**
+   - X-axis: Bowling Strike Rate
+   - Y-axis: Economy
+
+10. **Runs Scored vs. Balls Faced vs. Wickets Taken (3D Scatter Plot):**
+    - X-axis: Runs Scored
+    - Y-axis: Balls Faced
+    - Z-axis: Wickets Taken
+
+11. **Bowling Economy Over Years (Line Chart):**
+    - X-axis: Year
+    - Y-axis: Bowling Economy
+
+
+
+
+
+
+
+<div id="scatterChartContainer" style="width: 500px; height: 300px;">
+    <canvas id="scatterChart"></canvas>
+</div>
+
+
+  
+
+
+
+
+
+
+
+
+
+<!-- 
+<!DOCTYPE html>
+<html>
+<head>
+    <title>T-20 Score Predictor</title>
+</head>
+<body>
+    <h1>T-20 Score Predictor</h1>
+    <form method="post" id="prediction-form">
+        {% csrf_token %}
+
+        <div class="input-group">
+            <label for="batting_team">Select Batting Team:</label>
+            <select id="batting_team" name="batting_team">
+                <option value="" selected disabled>Select a team</option>
+                {% for team in teams %}
+                    <option value="{{ team }}">{{ team }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="bowling_team">Select Bowling Team:</label>
+            <select id="bowling_team" name="bowling_team">
+                <option value="" selected disabled>Select a team</option>
+                {% for bowl in teams %}
+                    <option value="{{ bowl }}">{{ bowl }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="city">Select a city:</label>
+            <select id="city" name="city">
+                <option value="" selected disabled>Select a city</option>
+                {% for city in cities %}
+                    <option value="{{ city }}">{{ city }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="current_score">Current Score:</label>
+            <input type="number" id="current_score" name="current_score" min="0">
+        </div>
+
+        <div class="input-group">
+            <label for="overs_done">Overs Done (Must Be Greater Than 5):</label>
+            <input type="number" id="overs_done" name="overs_done" min="5" max="20" step="1">
+        </div>
+
+        <div class="input-group">
+            <label for="wickets">Wickets Taken:</label>
+            <input type="number" id="wickets" name="wickets" max="9">
+        </div>
+
+        <div class="input-group">
+            <label for="runs_in_last_5_overs">Runs In Last 5 Overs:</label>
+            <input type="number" id="runs_in_last_5_overs" name="runs_in_last_5_overs" min="0">
+        </div>
+
+        <input type="submit" value="Predict Score" id="predict-button">
+    </form>
+
+    <div id="result">
+        <p>Predicted Score: <span id="predicted-score"></span></p>
+        <p>Predicted Boundaries: <span id="predicted-boundaries"></span></p>
+
+    </div>
+    
+
+    <script>
+        document.getElementById("prediction-form").addEventListener("submit", function (e) {
+            e.preventDefault();  // Prevent the default form submission behavior
+    
+            // Collect form data
+            var form = e.target;
+            var formData = new FormData(form);
+    
+            // Send form data using AJAX
+            fetch(form.action, {
+                method: form.method,
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.predicted_score) {
+                document.getElementById("predicted-score").textContent = data.predicted_score[0];
+                document.getElementById("predicted-boundaries").textContent = data.predicted_score[1];
+            }
+            });
+        });
+    </script>
+</body>
+</html> -->
+
+
+{% load static %}
+
+
+
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Hyperspace by HTML5 UP</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="{% static 'user/css/main.css' %}"/>
+		<noscript><link rel="stylesheet" href="{% static 'user/css/noscript.css' %}"></noscript>
+
+	</head>
+	<body class="is-preload">
+
+		<!-- Sidebar -->
+			<section id="sidebar">
+				<div class="inner">
+					<nav>
+						<ul>
+							<li><a href="#intro">Welcome</a></li>
+							<li><a href="#one">Who we are</a></li>
+							<li><a href="#two">What we do</a></li>
+							<li><a href="#three">Get in touch</a></li>
+						</ul>
+					</nav>
+				</div>
+			</section>
+
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Intro -->
+					<section id="intro" class="wrapper style1 fullscreen fade-up">
+						<div class="inner">
+							<h1>Hyperspace</h1>
+							<p>Just another fine responsive site template designed by <a href="http://html5up.net">HTML5 UP</a><br />
+							and released for free under the <a href="http://html5up.net/license">Creative Commons</a>.</p>
+							<ul class="actions">
+								<li><a href="#one" class="button scrolly">Learn more</a></li>
+							</ul>
+						</div>
+					</section>
+
+				<!-- One -->
+					<section id="one" class="wrapper style2 spotlights">
+						<section>
+							<a href="#" class="image"><img src="images/pic01.jpg" alt="" data-position="center center" /></a>
+							<div class="content">
+								<div class="inner">
+									<h2>Sed ipsum dolor</h2>
+									<p>Phasellus convallis elit id ullamcorper pulvinar. Duis aliquam turpis mauris, eu ultricies erat malesuada quis. Aliquam dapibus.</p>
+									<ul class="actions">
+										<li><a href="generic.html" class="button">Learn more</a></li>
+									</ul>
+								</div>
+							</div>
+						</section>
+						<section>
+							<a href="#" class="image"><img src="images/pic02.jpg" alt="" data-position="top center" /></a>
+							<div class="content">
+								<div class="inner">
+									<h2>Feugiat consequat</h2>
+									<p>Phasellus convallis elit id ullamcorper pulvinar. Duis aliquam turpis mauris, eu ultricies erat malesuada quis. Aliquam dapibus.</p>
+									<ul class="actions">
+										<li><a href="generic.html" class="button">Learn more</a></li>
+									</ul>
+								</div>
+							</div>
+						</section>
+						<section>
+							<a href="#" class="image"><img src="images/pic03.jpg" alt="" data-position="25% 25%" /></a>
+							<div class="content">
+								<div class="inner">
+									<h2>Ultricies aliquam</h2>
+									<p>Phasellus convallis elit id ullamcorper pulvinar. Duis aliquam turpis mauris, eu ultricies erat malesuada quis. Aliquam dapibus.</p>
+									<ul class="actions">
+										<li><a href="generic.html" class="button">Learn more</a></li>
+									</ul>
+								</div>
+							</div>
+						</section>
+					</section>
+
+				<!-- Two -->
+					<section id="two" class="wrapper style3 fade-up">
+						<div class="inner">
+							<h2>What we do</h2>
+							<p>Phasellus convallis elit id ullamcorper pulvinar. Duis aliquam turpis mauris, eu ultricies erat malesuada quis. Aliquam dapibus, lacus eget hendrerit bibendum, urna est aliquam sem, sit amet imperdiet est velit quis lorem.</p>
+							<div class="features">
+								<section>
+									<span class="icon solid major fa-code"></span>
+									<h3>Lorem ipsum amet</h3>
+									<p>Phasellus convallis elit id ullam corper amet et pulvinar. Duis aliquam turpis mauris, sed ultricies erat dapibus.</p>
+								</section>
+								<section>
+									<span class="icon solid major fa-lock"></span>
+									<h3>Aliquam sed nullam</h3>
+									<p>Phasellus convallis elit id ullam corper amet et pulvinar. Duis aliquam turpis mauris, sed ultricies erat dapibus.</p>
+								</section>
+								<section>
+									<span class="icon solid major fa-cog"></span>
+									<h3>Sed erat ullam corper</h3>
+									<p>Phasellus convallis elit id ullam corper amet et pulvinar. Duis aliquam turpis mauris, sed ultricies erat dapibus.</p>
+								</section>
+								<section>
+									<span class="icon solid major fa-desktop"></span>
+									<h3>Veroeros quis lorem</h3>
+									<p>Phasellus convallis elit id ullam corper amet et pulvinar. Duis aliquam turpis mauris, sed ultricies erat dapibus.</p>
+								</section>
+								<section>
+									<span class="icon solid major fa-link"></span>
+									<h3>Urna quis bibendum</h3>
+									<p>Phasellus convallis elit id ullam corper amet et pulvinar. Duis aliquam turpis mauris, sed ultricies erat dapibus.</p>
+								</section>
+								<section>
+									<span class="icon major fa-gem"></span>
+									<h3>Aliquam urna dapibus</h3>
+									<p>Phasellus convallis elit id ullam corper amet et pulvinar. Duis aliquam turpis mauris, sed ultricies erat dapibus.</p>
+								</section>
+							</div>
+							<ul class="actions">
+								<li><a href="generic.html" class="button">Learn more</a></li>
+							</ul>
+						</div>
+					</section>
+
+				<!-- Three -->
+					<section id="three" class="wrapper style1 fade-up">
+						<div class="inner">
+							<h2>Get in touch</h2>
+							<p>Phasellus convallis elit id ullamcorper pulvinar. Duis aliquam turpis mauris, eu ultricies erat malesuada quis. Aliquam dapibus, lacus eget hendrerit bibendum, urna est aliquam sem, sit amet imperdiet est velit quis lorem.</p>
+							<div class="split style1">
+								<section>
+									<form method="post" action="#">
+										<div class="fields">
+											<div class="field half">
+												<label for="name">Name</label>
+												<input type="text" name="name" id="name" />
+											</div>
+											<div class="field half">
+												<label for="email">Email</label>
+												<input type="text" name="email" id="email" />
+											</div>
+											<div class="field">
+												<label for="message">Message</label>
+												<textarea name="message" id="message" rows="5"></textarea>
+											</div>
+										</div>
+										<ul class="actions">
+											<li><a href="" class="button submit">Send Message</a></li>
+										</ul>
+									</form>
+								</section>
+								<section>
+									<ul class="contact">
+										<li>
+											<h3>Address</h3>
+											<span>12345 Somewhere Road #654<br />
+											Nashville, TN 00000-0000<br />
+											USA</span>
+										</li>
+										<li>
+											<h3>Email</h3>
+											<a href="#">user@untitled.tld</a>
+										</li>
+										<li>
+											<h3>Phone</h3>
+											<span>(000) 000-0000</span>
+										</li>
+										<li>
+											<h3>Social</h3>
+											<ul class="icons">
+												<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+												<li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
+												<li><a href="#" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
+												<li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
+												<li><a href="#" class="icon brands fa-linkedin-in"><span class="label">LinkedIn</span></a></li>
+											</ul>
+										</li>
+									</ul>
+								</section>
+							</div>
+						</div>
+					</section>
+
+			</div>
+
+		<!-- Footer -->
+			<footer id="footer" class="wrapper style1-alt">
+				<div class="inner">
+					<ul class="menu">
+						<li>&copy; Untitled. All rights reserved.</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+					</ul>
+				</div>
+			</footer>
+
+		<!-- Scripts -->
+			<script src="{% static 'user/js/jquery.min.js' %}"></script>
+			<script src="{% static 'user/js/jquery.scrollex.min.js' %}"></script>
+			<script src="{% static 'user/js/jquery.scrolly.min.js' %}"></script>
+			<script src="{% static 'user/js/browser.min.js' %}"></script>
+			<script src="{% static 'user/js/breakpoints.min.js' %}"></script>
+			<script src="{% static 'user/js/util.js' %}"></script>
+			<script src="{% static 'user/js/main.js' %}"></script>
+
+
+	</body>
+</html>

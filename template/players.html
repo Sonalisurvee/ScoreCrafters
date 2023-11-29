@@ -1,0 +1,851 @@
+{% load custom_filters %}
+{% load static %}
+
+
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Performance Metrics</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="{% static 'user/css/main.css' %}"/>
+		<noscript><link rel="stylesheet" href="{% static 'user/css/noscript.css' %}"></noscript>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+	</head>
+    <style>
+        table, th, td {
+          border: 0px solid;
+          
+        }
+        h2 {
+            text-align: center;
+            padding: 20px;
+        }
+        h3 {
+            text-align: center;
+            padding-bottom: 10px;
+            color: #d1e0ff;
+        }
+        .charts-row {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-bottom: 60px;
+        }        
+
+        .chart-container,
+        .chart-container-large {
+            width: 45%;
+            height: 300px;
+            margin: 0px;
+        }
+        .charts-roww {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+        .chart-containerr {
+            width: 45%;
+            height: 300px;
+            margin: 10px;
+        }
+        .Bowlers-row {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-bottom: 100px;
+        }
+
+        @media screen and (max-width: 1680px) {
+            .chart-container,
+            .chart-container-large{
+                max-width: 900px;
+                height: 300px;
+            }   
+            .chart-containerr {
+                max-width: 900px;
+                height: 250px;
+            }    
+            .run-container      {
+                max-width: 900px;
+            }
+        }
+
+        @media screen and (max-width: 980px) {
+            .chart-container,
+            .chart-container-large {
+                max-width: 800px;
+                height: 200px;
+            }
+            .chart-containerr {
+                max-width: 800px;
+                height: 200px;
+            }
+            .run-container      {
+                max-width: 800px;
+            }
+        }
+
+        @media screen and (max-width: 736px) {
+            .charts-row {
+                flex-direction: column;
+                align-items: center;
+            }
+            .charts-roww {
+                flex-direction: column;
+                align-items: center;
+            }
+
+
+            .chart-container,
+            .chart-container-large ,
+            .chart-containerr{
+                height: 200px;
+                width: 100%;
+                margin: 10px 0;
+            }
+            .run-container      {
+                max-width: 100%;
+                margin: 10px 0;
+
+            }
+
+        }
+        </style>
+        
+        <body class="is-preload">
+
+		<!-- Sidebar -->
+			<section id="sidebar">
+				<div class="inner">
+					<nav>
+						<ul>
+							<li><a href="{% url 'predict_score' %}">Home</a></li>
+							<li><a href="#one">Player metrics</a></li>
+							<li><a href="{% url 'team_analysiss' %}">Team analysis</a></li>
+							<!-- <li><a href="#three">Get in touch</a></li> -->
+						</ul>
+					</nav>
+				</div>
+			</section>
+
+			<div id="wrapper">
+                <section id="one" class="wrapper style2 spotlights">    
+                    <section>
+                        <div class="content">
+                            <div class="inner">
+                                <h2>Performance Metrics</h2>
+                                <div class="field half">
+                                    <form action="/players_performance" method="get"> 
+                                        <!-- <label for="player_name">Select a player:</label> -->
+                                        <select name="player" id="player_name">
+                                            {% for player in players %}
+                                                    <option value="{{ player }}">{{ player }}</option>
+                                            {% endfor %}
+                                        </select>
+                                </div>
+                                        <ul class="actions">
+                                            <input type="submit" value="Show Data">
+                                        </ul>
+
+                                    </form>
+                            </div>
+
+                            {% if player_metrics %}
+                            <table>
+                                <tr>
+                                    <td><strong>Player</strong> </td>
+                                    <td>{{ player_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Team</strong></td>
+                                    <td>{{ player_metrics.team }}</td>
+                                </tr>
+                                {% if player_metrics.batting_avg|valid_value %}
+                                <tr>
+                                    <td><strong>Batting Average</strong></td>
+                                    <td>{{ player_metrics.batting_avg|floatformat:2 }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if player_metrics.batting_sr|valid_value %}
+                                <tr>
+                                    <td><strong>Batting Strike Rate</strong></td>
+                                    <td>{{ player_metrics.batting_sr|floatformat:2 }}</td>
+                                </tr>
+                                {% endif %}                            
+                                {% if player_metrics.avg_balls_faced|valid_value %}
+                                <tr>
+                                    <td><strong>Average Balls Faced</strong></td>
+                                    <td>{{ player_metrics.avg_balls_faced|floatformat:2 }}</td>
+                                </tr>
+                                {% endif %}                            
+                                {% if player_metrics.boundary_percentage|valid_value %}
+                                <tr>
+                                    <td><strong>Boundary Percentage</strong></td>
+                                    <td>{{ player_metrics.boundary_percentage }}</td>
+                                </tr>
+                                {% endif %}                            
+                                {% if player_metrics.innings_batted|valid_value %}
+                                <tr>
+                                    <td><strong>Innings Batted</strong></td>
+                                    <td>{{ player_metrics.innings_batted }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if player_metrics.bowling_avg|valid_value %}
+                                <tr>
+                                    <td><strong>Bowling Average</strong></td>
+                                    <td>{{ player_metrics.bowling_avg|floatformat:2 }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if player_metrics.bowling_sr|valid_value %}
+                                <tr>
+                                    <td><strong>Bowling Strike Rate</strong></td>
+                                    <td>{{ player_metrics.bowling_sr|floatformat:2 }}</td>
+                                </tr>
+                                {% endif %}                            
+                                {% if player_metrics.wickets_taken|valid_value %}
+                                <tr>
+                                    <td><strong>Wickets Taken</strong></td>
+                                    <td>{{ player_metrics.wickets_taken }}</td>
+                                </tr>
+                                {% endif %}                            
+                                {% if player_metrics.dot_balls|valid_value %}
+                                <tr>
+                                    <td><strong>Dot Balls</strong></td>
+                                    <td>{{ player_metrics.dot_balls|floatformat:2 }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if player_metrics.economy|valid_value %}
+                                <tr>
+                                    <td><strong>Economy</strong></td>
+                                    <td>{{ player_metrics.economy|floatformat:2 }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if player_metrics.innings_bowled|valid_value %}
+                                <tr>
+                                    <td><strong>Innings Bowled</strong></td>
+                                    <td>{{ player_metrics.innings_bowled }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                            {% endif %}  
+
+                        </div>
+                    </section>
+
+                    
+                    {% if player_metrics %}
+                    {% if player_metrics.innings_bowled > 1 %}                    
+                    <section>
+                        <div class="content">
+                            <div class="inner charts-roww">
+                                <div class="chart-containerr">
+                                    <h3>Battign AVG and S/R</h3>
+                                    <div id="BattingAvgSRChart">
+                                        <canvas id="battingAvgSRChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="chart-containerr">
+                                    <h3>Bowling AVG and S/R</h3>
+                                    <div id="BowlingAvgSRChart">
+                                        <canvas id="bowlingAvgSRChart"></canvas>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section>
+                        <div class="content">
+                            <div class="inner">
+                                <div class="run-container">
+                                <h2>Over All</ulh2>
+                                    <div id="bowlingrunsBallsWicketsChart">
+                                        <canvas id="runsBallsWicketsChart"></canvas>
+                                    </div>    
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+
+                    <section>
+                        <div class="content">
+                            <h2 style="color: #d1e0ff;">Performance Chart</h2>
+                            <div class="inner">
+                                <div class="charts-row">
+                                    <div class="chart-container">
+                                        <canvas id="performanceChart"></canvas>
+                                    </div>
+                                    <div class="chart-container-large">
+                                        <canvas id="metricChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section> 
+
+                    <section>
+                        <div class="content">
+                            <div class="inner Bowlers-row">             
+                                <div class="chart-containerr">
+                                    <h3>Bowlers Performance Over Years</h3>
+                                    <div id="bowlingPerformanceChartContainer">
+                                        <canvas id="bowlingPerformanceChart"  style="height: 300px;"></canvas>
+                                    </div>
+                                </div>
+                                <div class="chart-containerr">
+                                    <h3>Balls VS Runs</h3>
+                                    <div id="BallsVSRunsChart">
+                                        <canvas id="BallsVSRuns" style="height: 300px;"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>    
+                    {% endif %}
+
+                    {% endif %}  
+                    {% if not player_metrics %}
+                    <section>
+                        <div class="content">
+                            <div class="inner">                        
+                            </div>
+                        </div>
+                    </section>
+                    {% endif %}  
+                    
+                </section>
+			</div>
+
+		<!-- Footer -->
+			<footer id="footer" class="wrapper style1-alt">
+				<div class="inner">
+					<ul class="menu">
+						<li><a href="{% url 'predict_score' %}">Home</a></li>
+					</ul>
+				</div>
+			</footer>
+
+		<!-- Scripts -->
+            <script>
+                var playerMetrics = {
+                    'Batting Average': {{ player_metrics.batting_avg }},
+                    'Bowling Average': {{ player_metrics.bowling_avg }},
+                    'Batting Strike Rate': {{ player_metrics.batting_sr }},
+                    'Average Balls Faced': {{ player_metrics.avg_balls_faced }},
+                    'Boundary Percentage': {{ player_metrics.boundary_percentage }},
+                    'Innings Batted': {{ player_metrics.innings_batted }},
+                    'Dot Balls': {{ player_metrics.dot_balls }},
+                    'Economy': {{ player_metrics.economy }},
+                    'Innings Bowled': {{ player_metrics.innings_bowled }},
+                };
+                
+                var playerMetricsYear = {
+                    'Year': {{ player_metrics_year.year|default:'[]' }},
+                    'Batting Average': {{ player_metrics_year.batting_avg|default:'[]' }},
+                    'Bowling Average': {{ player_metrics_year.bowling_avg|default:'[]' }},
+                    'Batting Strike Rate': {{ player_metrics_year.batting_sr|default:'[]' }},
+                    'Bowling Strike Rate': {{ player_metrics_year.bowling_sr|default:'[]' }},
+                    'Boundary Percentage': {{ player_metrics_year.boundary_percentage|default:'[]' }},
+                    'Total_Dismissals': {{ player_metrics_year.Total_Dismissals|default:'[]' }},
+                    'Total Runs': {{ player_metrics_year.total_runs|default:'[]' }},
+                    'Total Wickets': {{ player_metrics_year.total_wickets|default:'[]' }},
+                    'Innings Batted': {{ player_metrics_year.innings_batted|default:'[]' }},
+                    'Bowling Economy': {{ player_metrics_year.economy|default:'[]' }},
+                    'Ball Faced': {{ player_metrics_year.ball_faced|default:'[]' }},
+                    'Balls Bowled': {{ player_metrics_year.ball_bowled|default:'[]' }},           
+                    'Runs Given': {{ player_metrics_year.runs_given|default:'[]' }},           
+                };
+        
+            
+                // Batting AVG dn S/R-------------------------------------------------------------------------------------------------------------------------------------------
+                var battingAvgSRChartCtx = document.getElementById('battingAvgSRChart').getContext('2d');
+                var battingAvgSRChart = new Chart(battingAvgSRChartCtx, {
+                    type: 'line',
+                    data: {
+                        labels: playerMetricsYear['Year'],
+                        datasets: [
+                            {
+                                label: 'Batting AVG',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                data: playerMetricsYear['Batting Average'],
+                                yAxisID: 'y-axis-1',
+                            },
+                            {
+                                label: 'Batting S/R',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                data: playerMetricsYear['Batting Strike Rate'],
+                                yAxisID: 'y-axis-1',
+                            },
+                        ],
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                position: 'bottom',
+                                title: {
+                                    display: true,
+                                    text: 'Year',
+                                    color: 'white',
+                                },
+                                ticks: {
+                                    color: 'white',
+                                    callback: function (value) {
+                                        return value.toString().replace(/\B(?=(\d{4})+(?!\d))/g, ' '); // Format as 2,018 to 2018
+                                    },
+                                }
+                            },
+                            y: [
+                                {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    id: 'y-axis-1',
+                                    title: {
+                                        display: true,
+                                        text: 'Batting Average',
+                                        color: 'white', 
+                                    },
+                                    ticks: {
+                                        color: 'white', 
+                                    }
+                                },
+                                {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    id: 'y-axis-2',
+                                    title: {
+                                        display: true,
+                                        text: 'Batting S/R',
+                                        color: 'white', 
+                                    },
+                                    ticks: {
+                                        color: 'white', 
+                                    },
+                                },
+                            ],
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'white', 
+                                },
+                            },
+                        },
+                    },
+                });
+
+                // Bowling AVG dn S/R-------------------------------------------------------------------------------------------------------------------------------------------
+                var BowlingAvgSRCtx = document.getElementById('bowlingAvgSRChart').getContext('2d');
+                var bowlingAvgSRChart = new Chart(BowlingAvgSRCtx, {
+                    type: 'line',
+                    data: {
+                        labels: playerMetricsYear['Year'],
+                        datasets: [
+                            {
+                                label: 'Bowling AVG',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                data: playerMetricsYear['Bowling Average'],
+                                yAxisID: 'y-axis-1',
+                            },
+                            {
+                                label: 'Bowling S/R',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                data: playerMetricsYear['Bowling Strike Rate'],
+                                yAxisID: 'y-axis-1',
+                            },
+                        ],
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                position: 'bottom',
+                                title: {
+                                    display: true,
+                                    text: 'Year',
+                                    color: 'rgba(255, 255, 255, 1)', 
+                                },
+                                ticks: {
+                                    color: 'rgba(255, 255, 255, 1)',
+                                    callback: function (value) {
+                                        return value.toString().replace(/\B(?=(\d{4})+(?!\d))/g, ' '); // Format as 2,018 to 2018
+                                    },
+                                },
+                            },
+                            y: [
+                                {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    id: 'y-axis-1',
+                                    title: {
+                                        display: true,
+                                        text: 'Bowling Average',
+                                        color: 'rgba(75, 192, 192, 1)', 
+                                    },
+                                    ticks: {
+                                        color: 'rgba(75, 192, 192, 1)', 
+                                    },
+                                },
+                                {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    id: 'y-axis-2',
+                                    title: {
+                                        display: true,
+                                        text: 'Bowling Strike Rate',
+                                        color: 'rgba(255, 99, 132, 1)',
+                                    },
+                                    ticks: {
+                                        color: 'rgba(255, 99, 132, 1)',
+                                    },
+                                },
+                            ],
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'white', 
+                                },
+                            },
+                        },
+                    },
+                });
+
+                // Overall_Runs_Balls_Wickets-------------------------------------------------------------------------------------------------------------------------------------------
+                var runsBallsWicketsCtx = document.getElementById('runsBallsWicketsChart').getContext('2d');
+                var runsBallsWicketsChart = new Chart(runsBallsWicketsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: playerMetricsYear.Year,
+                        datasets: [
+                            {
+                                label: 'Runs Scored',
+                                data: playerMetricsYear['Total Runs'],
+                                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1,
+                            },
+                            {
+                                label: 'Balls Faced',
+                                data: playerMetricsYear['Ball Faced'],
+                                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1,
+                            },
+                            {
+                                label: 'Wickets Taken',
+                                data: playerMetricsYear['Total Wickets'],
+                                backgroundColor: 'rgba(255, 206, 86, 0.5)',
+                                borderColor: 'rgba(255, 206, 86, 1)',
+                                borderWidth: 1,
+                            }
+                        ],
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                stacked: false,
+                                title: {
+                                    display: true,
+                                    text: 'Year',
+                                    color: 'white'
+                                },
+                                ticks: {
+                                    color: 'white', 
+                                },
+                                grid: {
+                                    color: '#7070db' 
+                                }
+                            },
+                            y: {
+                                stacked: false,
+                                title: {
+                                    display: true,
+                                    text: 'Count',
+                                    color: 'white'
+                                },
+                                ticks: {
+                                    color: 'white', 
+                                },
+                                grid: {
+                                    color: '#7070db'
+                                },
+                            },
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'white',
+                                }
+                            }
+                        }
+                    },
+                });
+
+                // Overall_Performance_Chart-------------------------------------------------------------------------------------------------------------------------------------------
+                var performanceCtx = document.getElementById('performanceChart').getContext('2d');
+                var performanceChart = new Chart(performanceCtx, {
+                    type: 'bar',
+                    data: {
+                        // labels: Object.keys(playerMetrics),
+                        labels: ['Batting Avg','Bowling Avg','Batting S/R','Avg Balls Faced','Boundary %','Innings Batted',
+                    'Dot Balls','Economy','Innings Bowled'],
+                        datasets: [{
+                            label: 'Performance Metrics',
+                            data: Object.values(playerMetrics),
+                            backgroundColor: 'rgba(255, 153, 51,0.2)',
+                            borderColor: 'rgba(255,153,51, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y', // Display the chart horizontally
+                        elements: {
+                            bar: {
+                                borderWidth: 2,
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false, // Allow the chart to not maintain aspect ratio
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Performance Metrics',
+                                    color : 'white'
+                                },
+                                ticks: {
+                                    color: 'white', 
+                                },
+                                grid: {
+                                    color: '#7070db'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: false,
+
+                                },
+                                ticks: {
+                                    color: 'white', 
+                                },
+                                grid: {
+                                    color: '#7070db' 
+                                }
+                            },
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'white', 
+                                }
+                            }
+                        }
+                    }
+                });
+        
+                // Overall_Radar_Performance_Chart-------------------------------------------------------------------------------------------------------------------------------------------
+                var metricCtx = document.getElementById('metricChart').getContext('2d');
+                var metricChart = new Chart(metricCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Batting Average', 'Bowling Average', 'Batting Strike Rate', 'Bowling Strike Rate', 'Boundary Percentage', 'Bowling Economy'],
+                        datasets: [{
+                            label: 'Overall Performance',
+                            data: [
+                                playerMetrics['Batting Average'],
+                                playerMetrics['Bowling Average'],
+                                playerMetrics['Batting Strike Rate'],
+                                playerMetrics['Bowling Strike Rate'],
+                                playerMetrics['Boundary Percentage'],
+                                playerMetrics['Bowling Economy']
+
+                            ],
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)', 
+                            borderColor: 'rgba(255, 99, 132, 1)', 
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                grid: {
+                                    color: '#7070db' //  the color of the radar axis lines
+                                },
+                                angleLines: {
+                                    color: '#7070db' //  the color of the lines connecting the radar axis to the center
+                                },
+                                pointLabels: {
+                                    color: 'white' //  the color of the radar chart labels
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'white' 
+                                }
+                            }
+                        }
+                    }
+
+
+                });
+
+                // Bowlers Performance Over Years-------------------------------------------------------------------------------------------------------------------------------------------
+                var bowlingPerformanceCtx = document.getElementById('bowlingPerformanceChart').getContext('2d');
+                var bowlingPerformanceChart = new Chart(bowlingPerformanceCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: playerMetricsYear['Year'],
+                            datasets: [
+                                {
+                                    label: 'Wickets taken',
+                                    data: playerMetricsYear['Total Wickets'],
+                                    backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                                },
+                                {
+                                    label: 'Bowling Avg',
+                                    data: playerMetricsYear['Bowling Average'],
+                                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                                },
+                                {
+                                    label: 'Bowling S/R',
+                                    data: playerMetricsYear['Bowling Strike Rate'],
+                                    backgroundColor: 'rgba(255, 255, 0, 0.7)',
+                                },
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    stacked: false,
+                                    title: {
+                                        display: true,
+                                        text: 'Years',
+                                        color : 'white'
+                                    },                                    
+                                    ticks: {
+                                        color: 'white', 
+                                    },                                    
+                                    grid: {
+                                        color: '#7070db' 
+                                    }
+                                },
+                                y: {
+                                    maxTicksLimit: 10, 
+
+                                    stacked: false,
+                                    ticks: {
+                                        color: 'white', 
+                                    },                                    
+                                    grid: {
+                                        color: '#7070db' 
+                                    }
+                                }
+                            },
+                            plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'white', 
+                                }
+                            }
+                        }
+                        }
+
+
+                    });
+                   
+                // Balls VS Runs-------------------------------------------------------------------------------------------------------------------------------------------
+                var scatterCtx = document.getElementById('BallsVSRuns').getContext('2d');
+                var BallsVSRuns = new Chart(scatterCtx, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: 'Total Balls Bowled vs. Total Runs Given',
+                            data: playerMetricsYear['Balls Bowled'].map((ballsBowled, index) => ({
+                                x: ballsBowled,
+                                y: playerMetricsYear['Runs Given'][index],
+                            })),
+                            backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                            pointStyle: 'rectRot', 
+                            pointRadius: 10, 
+                            borderWidth: 1,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false, 
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                position: 'bottom',
+                                title: {
+                                    display: true,
+                                    text: 'Total Balls Bowled',
+                                    color : 'white'
+                                },
+                                ticks: {
+                                        color: 'white', 
+                                },                                    
+                                grid: {
+                                    color: '#7070db' 
+                                }
+                            },
+                            y: {
+                                maxTicksLimit: 10, 
+
+                                type: 'linear',
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'Total Runs Given',
+                                    color : 'white'
+                                },
+                                ticks: {
+                                        color: 'white', 
+                                    },                                    
+                                grid: {
+                                    color: '#7070db' 
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'white',
+                                }
+                            }
+                        }
+                    }
+                });
+
+            </script>
+            
+
+			<script src="{% static 'user/js/jquery.min.js' %}"></script>
+			<script src="{% static 'user/js/jquery.scrollex.min.js' %}"></script>
+			<script src="{% static 'user/js/jquery.scrolly.min.js' %}"></script>
+			<script src="{% static 'user/js/browser.min.js' %}"></script>
+			<script src="{% static 'user/js/breakpoints.min.js' %}"></script>
+			<script src="{% static 'user/js/util.js' %}"></script>
+			<script src="{% static 'user/js/main.js' %}"></script>
+
+	</body>
+</html>

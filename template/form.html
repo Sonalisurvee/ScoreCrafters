@@ -1,0 +1,200 @@
+{% load static %}
+
+
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>T20 Predictor</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="{% static 'user/css/main.css' %}"/>
+		<noscript><link rel="stylesheet" href="{% static 'user/css/noscript.css' %}"></noscript>
+
+	</head>
+    <style>
+        .input-group select {
+            width: 100%;
+            padding: 0.5em;
+            margin-top: 0.5em;
+            margin-bottom: 1em;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .input-group select option {
+            color: #fff;
+        }
+        .input-group select:hover option {
+            background-color: #5e42a6;
+
+        }
+        @media screen and (max-width: 736px) {
+
+			#sidebar {
+				display: inline;
+			}
+
+		}
+        .rectangle {
+            background-color: rgba(255, 255, 255, 0.05);
+            height: 50px;
+            width: 100%;
+            border: 1px  ; /* Add a white border */
+            border-radius: 10px; /* Add border-radius for curved corners */
+            padding: 10px; /* Add padding */
+            margin-bottom: 30px;
+            }
+        .rectangle h4{
+            text-align: center;
+            color: #ffcc00;
+            font-size: 15px;
+        }
+
+    </style>
+	<body class="is-preload">
+
+		<!-- Sidebar -->
+			<section id="sidebar">
+				<div class="inner">
+					<nav>
+						<ul>
+							<li><a href="#intro">HOME</a></li>
+							<li><a href="{% url 'players_performance' %}">Player metrics</a></li>
+							<li><a href="{% url 'team_analysiss' %}">Team analysis</a></li>
+							<!-- <li><a href="#three">Get in touch</a></li> -->
+						</ul>
+					</nav>
+				</div>
+			</section>
+
+			<div id="wrapper">
+
+					<section id="intro" class="wrapper style1 fullscreen fade-up">
+                        <div class="inner">
+                            <h1 style="text-align: center;">T-20 Score Predictor</h1>
+                            <!-- <div class="rectangle">
+                                <h4 id="error-message"></h4>
+                            </div> -->
+                            <div class="rectangle" style="display: {% if error_message %}'block'{% else %}'none'{% endif %};">
+                                <h4 id="error-message">{{ error_message }}</h4>
+                            </div>
+
+                                <form method="post" id="prediction-form">
+                                        {% csrf_token %}
+										<div class="fields">
+									        <div class="field half">
+                                                <label for="batting_team">Select Batting Team:</label>
+                                                <select id="batting_team" name="batting_team">
+                                                    <option value="" selected disabled>Select a team</option>
+                                                    {% for team in teams %}
+                                                        <option value="{{ team }}">{{ team }}</option>
+                                                    {% endfor %}
+                                                </select>
+											</div>
+											<div class="field half">
+                                                <label for="bowling_team">Select Bowling Team:</label>
+                                                <select id="bowling_team" name="bowling_team">
+                                                    <option value="" selected disabled>Select a team</option>
+                                                    {% for bowl in teams %}
+                                                        <option value="{{ bowl }}">{{ bowl }}</option>
+                                                    {% endfor %}
+                                                </select>
+											</div>
+                                            
+											<div class="field">
+                                                <label for="city">Select a city:</label>
+                                                <select id="city" name="city">
+                                                    <option value="" selected disabled>Select a city</option>
+                                                    {% for city in cities %}
+                                                        <option value="{{ city }}">{{ city }}</option>
+                                                    {% endfor %}
+                                                </select>
+											</div>
+                                            <div class="field third">
+                                                <label for="current_score">Current Score:</label>
+                                                <input type="text" id="current_score" name="current_score">
+                                            </div>
+                                    
+                                            <div class="field third">
+                                                <label for="overs_done">Overs Done :</label>
+                                                <input type="text" id="overs_done" name="overs_done">
+                                            </div>
+                                    
+                                            <div class="field third">
+                                                <label for="wickets">Wickets Taken:</label>
+                                                <input type="text" id="wickets" name="wickets" >
+                                            </div>
+                                    
+                                            <div class="field">
+                                                <label for="runs_in_last_5_overs">Runs In Last 5 Overs:</label>
+                                                <input type="text" id="runs_in_last_5_overs" name="runs_in_last_5_overs">
+                                            </div>
+										</div>
+
+										<ul class="actions">
+                                            <input type="submit" value="Predict Score" id="predict-button">
+
+										</ul>
+									</form>
+                                    <div id="result" >
+                                        <p><strong>Predicted Score: </strong><span id="predicted-score"></span></p>
+                                        <p><strong>Predicted Boundaries: </strong><span id="predicted-boundaries" style="display: inline-block;"></span></p>
+
+                                
+                                    </div>								
+                                </div>    
+
+					</section>
+
+			</div>
+
+		<!-- Footer -->
+			<footer id="footer" class="wrapper style1-alt">
+				<div class="inner">
+					<ul class="menu">
+						<li><a href="{% url 'predict_score' %}">Home</a></li>
+					</ul>
+				</div>
+			</footer>
+
+		<!-- Scripts -->
+            <script>
+                document.getElementById("prediction-form").addEventListener("submit", function (e) {
+                    e.preventDefault();  // Prevent the default form submission behavior
+            
+                    // Collect form data
+                    var form = e.target;
+                    var formData = new FormData(form);
+            
+                    // Send form data using AJAX
+                    fetch(form.action, {
+                        method: form.method,
+                        body: formData,
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            document.getElementById("error-message").textContent = data.error;
+                        } else {
+                            document.getElementById("error-message").textContent = "";
+                            
+                        if (data.predicted_score) {
+                        document.getElementById("predicted-score").textContent = data.predicted_score[0];
+                        document.getElementById("predicted-boundaries").textContent = data.predicted_score[1] + '%';
+                        }
+                    }
+                    });
+                });
+            </script>
+
+			<script src="{% static 'user/js/jquery.min.js' %}"></script>
+			<script src="{% static 'user/js/jquery.scrollex.min.js' %}"></script>
+			<script src="{% static 'user/js/jquery.scrolly.min.js' %}"></script>
+			<script src="{% static 'user/js/browser.min.js' %}"></script>
+			<script src="{% static 'user/js/breakpoints.min.js' %}"></script>
+			<script src="{% static 'user/js/util.js' %}"></script>
+			<script src="{% static 'user/js/main.js' %}"></script>
+
+
+	</body>
+</html>
